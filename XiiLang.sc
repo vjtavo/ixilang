@@ -1,3 +1,7 @@
+/* In most of the parts where I added something I put the comment:
+ //vjtavo
+ */
+
 
 /*
 
@@ -38,6 +42,7 @@ TODO: Check the use of String:drop(1) and String:drop(-1)
 // Synthdefs added to the mapping file (no distinction between samples and synths)
 // scheme-like operators [+ agentname 12]
 // added full stops as equivalent to spaces
+// added cue argument as postfix for listens to an agent through headphones while playing another through the sound system. VJTAVO
 
 // FIXED BUG: snapshots do not perk up agents that have been dozed
 // FIXED BUG: Snapshots do not recall the effect state
@@ -49,8 +54,8 @@ TODO: Check the use of String:drop(1) and String:drop(-1)
 
 
 // Add: ptpd support for netclocks
-// Êsudo ./ptpd -cd
-// Êhttp://sourceforge.net/projects/ptpd/develop
+// Â sudo ./ptpd -cd
+// Â http://sourceforge.net/projects/ptpd/develop
 
 /*
 Dependencies:
@@ -150,7 +155,7 @@ XiiLang {
 				"$", ">>", "<<", "tempo", "scale", "scalepush", "tuning", "tuningpush", "remind", "help", 
 				"tonality", "instr", "tonic", "grid", "kill", "doze", "perk", "nap", "shake", "swap", ">shift", 
 				"<shift", "invert", "expand", "revert", "up", "down", "yoyo", "order", "dict", "store", "load", 
-				"midiclients", "midiout", "matrix", "autocode", "coder", "+", "-", "*", "/", "!", "^", "(", "<",
+				"midiclients", "midiout", "matrix", "autocode", "coder", "+", "-", "*", "/", "!", "^", "(", "<","cue",
 				"hash", "beer", "coffee", "LSD", "detox", "new", "savescore", "playscore", "suicide", "hotline", "newrec"];  // removed "." XXX
 		
 		if(lang.isNil, { 
@@ -542,7 +547,7 @@ XiiLang {
 						{1} { this.parseScoreMode1(dictscore) };
 					//	{2} { this.parseScoreMode2(dictscore) }; // not relevant
 					if(agent[1].playstate == true, {
-						proxyspace[agent].play;
+						proxyspace[agent].play(outbus:2);
 					});
 				});
 			}
@@ -577,7 +582,7 @@ XiiLang {
 						{1} { this.parseScoreMode1(dictscore) };
 					//	{2} { this.parseScoreMode2(dictscore) }; // not relevant
 					if(agent[1].playstate == true, {
-						proxyspace[agent].play;
+						proxyspace[agent].play(outbus:2);
 					});
 				});
 			}
@@ -654,13 +659,14 @@ XiiLang {
 			}
 			{"sequence"}{
 				var spaces, sequenceagent, op, seqagents, typecheck, firsttype, sa, originalstring, originalagents, fullscore;
-				var notearr, durarr, sustainarr, instrarr, attackarr, amparr, panarr, score, instrument, quantphase, newInstrFlag = false;
+				var notearr, durarr, sustainarr, instrarr, attackarr, amparr, cuearr, panarr, score, instrument, quantphase, newInstrFlag = false; //vjtavo
 				typecheck = 0;
 				notearr = [];
 				durarr = [];
 				sustainarr = [];
 				attackarr = [];
 				amparr = [];
+				cuearr = [];  //vjtavo
 				panarr = [];
 				instrarr = [];
 				score = "";
@@ -702,6 +708,7 @@ XiiLang {
 								sustainarr = sustainarr ++ agentDict[agent][1].sustainarr;
 								instrarr = instrarr ++ agentDict[agent][1].instrarr;
 								attackarr	= attackarr ++ agentDict[agent][1].attackarr;
+								cuearr = cuearr ++ agentDict[agent][1].cuearr;   //vjtavo
 								panarr	= panarr ++ agentDict[agent][1].panarr;
 								score = score ++ agentDict[agent][1].score; // just for creating the score in the doc
 							});
@@ -720,11 +727,13 @@ XiiLang {
 								agentDict[sequenceagent][1].sustainarr = sustainarr;
 								agentDict[sequenceagent][1].instrarr = instrarr;
 								agentDict[sequenceagent][1].attackarr = attackarr;
+								agentDict[sequenceagent][1].cuearr = cuearr;   // vjtavo 
 								agentDict[sequenceagent][1].panarr = panarr;
 								agentDict[sequenceagent][1].score = score;
 								agentDict[sequenceagent][1].quantphase = quantphase;
 								doc.string_(doc.string.replace(originalstring, fullscore++"\n"));
-								this.playScoreMode0(sequenceagent, notearr, durarr, instrarr, sustainarr, attackarr, panarr, quantphase, newInstrFlag, agentDict[sequenceagent][1].morphmode);
+						this.playScoreMode0(sequenceagent, notearr, durarr, instrarr, sustainarr, attackarr, cuearr, panarr, quantphase, newInstrFlag, agentDict[sequenceagent][1].morphmode);
+						//vjtavo
 						}
 						{1} {
 
@@ -750,13 +759,14 @@ XiiLang {
 								agentDict[sequenceagent][1].durarr = durarr;
 								agentDict[sequenceagent][1].sustainarr = sustainarr;
 								agentDict[sequenceagent][1].notearr = notearr;
+								agentDict[sequenceagent][1].cuearr = cuearr;     //vjtavo
 								agentDict[sequenceagent][1].attackarr = attackarr;
 								agentDict[sequenceagent][1].panarr = panarr;
 								agentDict[sequenceagent][1].score = score;
 								agentDict[sequenceagent][1].quantphase = quantphase;
 							
 								doc.string_(doc.string.replace(originalstring, fullscore++"\n"));
-								this.playScoreMode1(sequenceagent, notearr, durarr, sustainarr, attackarr, panarr, instrument, quantphase, newInstrFlag);
+								this.playScoreMode1(sequenceagent, notearr, durarr, sustainarr, attackarr, cuearr, panarr, instrument, quantphase, newInstrFlag);
 						}
 						{2} {
 							seqagents.do({arg agent, i;
@@ -777,11 +787,12 @@ XiiLang {
 								agentDict[sequenceagent][1].instrument = instrument;
 								agentDict[sequenceagent][1].durarr = durarr;
 								agentDict[sequenceagent][1].amparr = amparr;
+								agentDict[sequenceagent][1].cuearr = cuearr;   // vjtavo
 								agentDict[sequenceagent][1].panarr = panarr;
 								agentDict[sequenceagent][1].score = score;
 								agentDict[sequenceagent][1].quantphase = quantphase;
 								doc.string_(doc.string.replace(originalstring, fullscore++"\n"));
-								this.playScoreMode2(sequenceagent, amparr, durarr, panarr, instrument, quantphase, newInstrFlag);
+								this.playScoreMode2(sequenceagent, amparr, durarr, cuearr, panarr, instrument, quantphase, newInstrFlag);
 						};
 				});				
 			}
@@ -863,6 +874,9 @@ XiiLang {
 			{"("}{
 				this.parseMethod(string);			
 			}
+			{"cue"}{
+				this.parseMethod(string);			
+			}
 			{"<"}{
 				this.parseMethod(string);			
 			}
@@ -905,7 +919,7 @@ XiiLang {
 				destination = string[nrstart..string.size-1].asInteger;
 				midiclient = MIDIOut(destination);
 				"---> You set the MIDI out to : ".post; MIDIClient.destinations[destination].postln;
-				MIDIClockOut(destination).play; // XXX experimental
+				MIDIClockOut(destination).play(outbus:2); // XXX experimental
 			}
 			{"matrix"}{
 				var spaces, size=8, direction=\x;
@@ -1200,6 +1214,7 @@ XiiLang {
 	parsePostfixArgs {arg postfixstring;
 		var sustainstartloc, sustainendloc, sustainstring, sustainarr;
 		var attacksymbols, attackstartloc, attackendloc, attackstring, attackarr;
+		var cuetrue, cuestring, cuearr;                           // vjtavo
 		var pansymbol, panstartloc, panendloc, panstring, panarr;
 		var argDict, multiplication, multloc;
 		multiplication = 1;
@@ -1279,7 +1294,20 @@ XiiLang {
 			attackarr = attackarr.add(att.asString.asInteger/9); // values range from 0 to 1.0
 		 });
 		argDict.add(\attackarr -> attackarr);
-
+		
+         // -- cueing -- here  asigned the value for out     vjtavo
+		cuetrue = postfixstring.find("cue");
+		if(cuetrue.isNil, {
+			cuestring = "0";
+		}, {
+			cuestring = "2" // number of channel for headphones on your audio interface
+		});
+		cuestring.do({arg cue; 
+				cuearr = cuearr.add(cue.asString.asInteger);
+		});
+		
+		argDict.add(\cuearr -> cuearr);
+		
 		// -- panning --
 		pansymbol = postfixstring.find("<");
 		if(pansymbol.isNil, {
@@ -1300,7 +1328,7 @@ XiiLang {
 	parseScoreMode0 {arg string; 
 		var agent, pureagent, score, splitloc, endchar, agentstring, silenceicon, silences, scorestring, timestretch=1, postfixargs;
 		var durarr, notearr, sustainarr, spacecount, instrarr, instrstring, quantphase, empty, outbus;
-		var attacksymbols, attackstartloc, attackendloc, attackstring, attackarr, panarr, transposition;
+		var attacksymbols, attackstartloc, attackendloc, attackstring, attackarr, cuearr, panarr, transposition;
 		var startWempty = false;
 		var newInstrFlag = false;
 		var postfixArgDict;
@@ -1326,6 +1354,7 @@ XiiLang {
 		attackarr = postfixArgDict.attackarr;
 		timestretch = postfixArgDict.timestretch;
 		silences = postfixArgDict.silences;
+		cuearr = postfixArgDict.cuearr;         // vjtavo
 		panarr = postfixArgDict.panarr;
 		transposition = postfixArgDict.transposition;
 		notearr = [60+transposition];
@@ -1381,6 +1410,7 @@ XiiLang {
 		agentDict[agent][1].instrarr = instrarr;
 		agentDict[agent][1].sustainarr = sustainarr;
 		agentDict[agent][1].attackarr = attackarr;
+		agentDict[agent][1].cuearr = cuearr;
 		agentDict[agent][1].panarr = panarr;
 		agentDict[agent][1].score = score;
 		agentDict[agent][1].scorestring = scorestring.asCompileString;
@@ -1388,7 +1418,7 @@ XiiLang {
 
 		{doc.stringColor_(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1);  // if code is green (sleeping)
 		"------    ixi lang: Created Percussive Agent : ".post; pureagent.postln; agentDict[agent].postln;
-		this.playScoreMode0(agent, notearr, durarr, instrarr, sustainarr, attackarr, panarr, quantphase, newInstrFlag, morphmode); 
+		this.playScoreMode0(agent, notearr, durarr, instrarr, sustainarr, attackarr, cuearr, panarr, quantphase, newInstrFlag, morphmode); 
 		// this has to be below the playscore method
 		agentDict[agent][1].playstate = true;
 	}	
@@ -1399,7 +1429,7 @@ XiiLang {
 		var prestring, silenceicon, silences, postfixargs, newInstrFlag = false;
 		var durarr, sustainarr, spacecount, notearr, notestring, quantphase, empty, outbus;
 		var sustainstartloc, sustainendloc, sustainstring;
-		var attacksymbols, attackstartloc, attackendloc, attackstring, attackarr, panarr;
+		var attacksymbols, attackstartloc, attackendloc, attackstring, attackarr, cuearr, panarr;
 		var startWempty = false;
 		var channelicon, midichannel;
 		var postfixArgDict;
@@ -1430,6 +1460,7 @@ XiiLang {
 		timestretch = postfixArgDict.timestretch;
 		silences = postfixArgDict.silences;
 		transposition = postfixArgDict.transposition;
+		cuearr = postfixArgDict.cuearr;                 //vjtavo
 		panarr = postfixArgDict.panarr;
 		
 		channelicon = score.find("c");
@@ -1498,6 +1529,7 @@ XiiLang {
 		agentDict[agent][1].notearr = notearr;
 		agentDict[agent][1].sustainarr = sustainarr;
 		agentDict[agent][1].attackarr = attackarr;
+		agentDict[agent][1].cuearr = cuearr;                  // vjtavo
 		agentDict[agent][1].panarr = panarr;
 		agentDict[agent][1].score = score;
 		agentDict[agent][1].scorestring = string.asCompileString;
@@ -1506,7 +1538,7 @@ XiiLang {
 
 		{doc.stringColor_(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1);  // if code is green (sleeping)
 		"------    ixi lang: Created Melodic Agent : ".post; pureagent.postln; agentDict[agent].postln;
-		this.playScoreMode1(agent, notearr, durarr, sustainarr, attackarr, panarr, instrument, quantphase, newInstrFlag, midichannel); 
+		this.playScoreMode1(agent, notearr, durarr, sustainarr, attackarr, cuearr, panarr, instrument, quantphase, newInstrFlag, midichannel); 
 		// this has to be below the playscore method
 		agentDict[agent][1].playstate = true;
 	}	
@@ -1514,7 +1546,7 @@ XiiLang {
 	// CONCRETE MODE
 	parseScoreMode2 {arg string;
 		var agent, pureagent, score, scorestartloc, splitloc, endchar, agentstring, instrument, instrstring, timestretch=1;
-		var prestring, silenceicon, silences, postfixargs, panarr, newInstrFlag;
+		var prestring, silenceicon, silences, postfixargs, cuearr, panarr, newInstrFlag;
 		var durarr, pitch, spacecount, amparr, ampstring, quantphase, empty, outbus;
 		var startWempty = false;
 		var postfixArgDict;
@@ -1539,6 +1571,7 @@ XiiLang {
 		postfixArgDict = this.parsePostfixArgs(postfixargs);
 		timestretch = postfixArgDict.timestretch;
 		silences = postfixArgDict.silences;
+		cuearr = postfixArgDict.cuearr;       // vjtavo
 		panarr = postfixArgDict.panarr;
 		pitch = 60 + postfixArgDict.transposition;
 
@@ -1594,6 +1627,7 @@ XiiLang {
 		agentDict[agent][1].quantphase = quantphase;
 		agentDict[agent][1].durarr = durarr;
 		agentDict[agent][1].amparr = amparr;
+		agentDict[agent][1].cuearr = cuearr;                 // vjtavo
 		agentDict[agent][1].panarr = panarr;
 		agentDict[agent][1].pitch = pitch;
 		agentDict[agent][1].score = score;		
@@ -1602,7 +1636,7 @@ XiiLang {
 
 		{doc.stringColor_(oncolor, doc.selectionStart, doc.selectionSize)}.defer(0.1); // if code is green (sleeping)
 		"------    ixi lang: Created Concrete Agent : ".post; pureagent.postln; agentDict[agent].postln;
-		this.playScoreMode2(agent, pitch, amparr, durarr, panarr, instrument, quantphase, newInstrFlag); 
+		this.playScoreMode2(agent, pitch, amparr, durarr, cuearr, panarr, instrument, quantphase, newInstrFlag); 
 		// this has to be below the playscore method
 		agentDict[agent][1].playstate = true; // EXPERIMENTAL: to be used in snapshots
 	}	
@@ -1617,7 +1651,7 @@ XiiLang {
 //		if(mode == \c, {
 //			chordstartloc = string.find("(");
 //		},{
-//			chordstartloc = string.find("±");
+//			chordstartloc = string.find("Â±");
 //		});
 		if(varname.interpret.isInteger, { // PERCUSSIVE MODE ------------ NOT WORKING - Pseq(\instrument does not expand)
 			chordstring = string[splitloc+3..string.size-3];
@@ -1643,7 +1677,7 @@ XiiLang {
 		});
 	}	
 
-	playScoreMode0 {arg agent, notearr, durarr, instrarr, sustainarr, attackarr, panarr, quantphase, newInstrFlag, morphmode;
+	playScoreMode0 {arg agent, notearr, durarr, instrarr, sustainarr, attackarr, cuearr, panarr, quantphase, newInstrFlag, morphmode;
 		var loop;
 		if(morphmode.isNil, {
 			// ------------ play function --------------
@@ -1654,11 +1688,12 @@ XiiLang {
 							\dur, Pseq(durarr, inf),
 							\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 							\sustain, Pseq(sustainarr, inf),
+							\out, cuearr.postln,                  // vjtavo
 							\pan, Pseq(panarr, inf)
 				));
 				proxyspace[agent].quant = [durarr.sum, quantphase, 0, 1];
 				proxyspace[agent] = Pdef(agent);
-				proxyspace[agent].play;
+				proxyspace[agent].play(outbus:2);
 			},{
 				if(newInstrFlag, { // only if instrument was {, where Pmono bufferplayer synthdef needs to be shut down
 					proxyspace[agent].free; // needed in order to swap instrument in Pmono
@@ -1668,9 +1703,10 @@ XiiLang {
 								\dur, Pseq(durarr, inf),
 								\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 								\sustain, Pseq(sustainarr, inf),
+				      			\out, cuearr.postln,                       // vjtavo
 								\pan, Pseq(panarr, inf)
 					)).quant = [durarr.sum, quantphase, 0, 1];
-					{ proxyspace[agent].play }.defer(0.5); // defer needed as the free above and play immediately doesn't work
+					{ proxyspace[agent].play(outbus:2) }.defer(0.5); // defer needed as the free above and play immediately doesn't work
 				}, {	// default behavior
 					Pdef(agent, Pbind(
 								\instrument, Pseq(instrarr, inf), 
@@ -1678,11 +1714,12 @@ XiiLang {
 								\dur, Pseq(durarr, inf),
 								\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 								\sustain, Pseq(sustainarr, inf),
+								\out, cuearr.postln,                       // vjtavo
 								\pan, Pseq(panarr, inf)
 					)).quant = [durarr.sum, quantphase, 0, 1];
 						//proxyspace[agent].play; // this would build up synths on server on commands such as yoyo agent
 					if(agentDict[agent][1].playstate == false, {
-						proxyspace[agent].play; // this would build up synths on server on commands such as yoyo agent
+						proxyspace[agent].play(outbus:2); // this would build up synths on server on commands such as yoyo agent
 					});
 				});
 			});
@@ -1707,12 +1744,13 @@ XiiLang {
 							\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 							\morphtime, Pseq(durarr/TempoClock.default.tempo, inf),
 							//\sustain, Pseq(sustainarr, inf),
+							\out, cuearr.postln,                     // vjtavo
 							\panFrom, Pseq(panarr, inf),
 							\panTo, Pseq(panarr.rotate(-1), inf)
 				));
 				proxyspace[agent].quant = [durarr.sum, quantphase, 0, 1];
 				proxyspace[agent] = Pdef(agent);
-				proxyspace[agent].play;
+				proxyspace[agent].play(outbus:2);
 			},{
 				if(newInstrFlag, { // only if instrument was {, where Pmono bufferplayer synthdef needs to be shut down
 					proxyspace[agent].free; // needed in order to swap instrument in Pmono
@@ -1726,11 +1764,12 @@ XiiLang {
 							\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 							\morphtime, Pseq(durarr/TempoClock.default.tempo, inf),
 							//\sustain, Pseq(sustainarr, inf),
-							//\pan, Pseq(panarr, inf)
+				      		//\pan, Pseq(panarr, inf)
+							\out, cuearr.postln,                      // vjtavo
 							\panFrom, Pseq(panarr, inf),
 							\panTo, Pseq(panarr.rotate(-1), inf)
 					)).quant = [durarr.sum, quantphase, 0, 1];
-					{ proxyspace[agent].play }.defer(0.5); // defer needed as the free above and play immediately doesn't work
+					{ proxyspace[agent].play(outbus:2) }.defer(0.5); // defer needed as the free above and play immediately doesn't work
 				}, {	// default behavior
 					Pdef(agent, Pbind(
 							\instrument, morphmode.asSymbol, 
@@ -1742,19 +1781,20 @@ XiiLang {
 							\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
 							\morphtime, Pseq(durarr/TempoClock.default.tempo, inf),
 							//\sustain, Pseq(sustainarr, inf),
+							\out, cuearr.postln,                     // vjtavo
 							\panFrom, Pseq(panarr, inf),
 							\panTo, Pseq(panarr.rotate(-1), inf)
 					)).quant = [durarr.sum, quantphase, 0, 1];
 						//proxyspace[agent].play; // this would build up synths on server on commands such as yoyo agent
 					if(agentDict[agent][1].playstate == false, {
-						proxyspace[agent].play; // this would build up synths on server on commands such as yoyo agent
+						proxyspace[agent].play(outbus:2); // this would build up synths on server on commands such as yoyo agent
 					});
 				});
 			});
 		});
 	}
 	
-	playScoreMode1 {arg agent, notearr, durarr, sustainarr, attackarr, panarr, instrument, quantphase, newInstrFlag, midichannel=0;
+	playScoreMode1 {arg agent, notearr, durarr, sustainarr, attackarr, cuearr, panarr, instrument, quantphase, newInstrFlag, midichannel=0;
 		if(instrument.asString=="midi", { eventtype = \midi }, { eventtype = \note });
 		
 		// ------------ play function --------------
@@ -1768,11 +1808,12 @@ XiiLang {
 						\dur, Pseq(durarr, inf),
 						\sustain, Pseq(sustainarr, inf),
 						\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
+						\out, cuearr.postln,                      // vjtavo
 						\pan, Pseq(panarr, inf)
 			));
 			proxyspace[agent].quant = [durarr.sum, quantphase, 0, 1];
 			proxyspace[agent] = Pdef(agent);
-			proxyspace[agent].play;
+			proxyspace[agent].play(outbus:2);
 		},{
 			if(newInstrFlag, { // only if instrument was {, where Pmono bufferplayer synthdef needs to be shut down
 				proxyspace[agent].free; // needed in order to swap instrument in Pmono
@@ -1785,9 +1826,10 @@ XiiLang {
 						\dur, Pseq(durarr, inf),
 						\sustain, Pseq(sustainarr, inf),
 						\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
+						\out, cuearr.postln,                      // vjtavo
 						\pan, Pseq(panarr, inf)
 				)).quant = [durarr.sum, quantphase, 0, 1];
-				{ proxyspace[agent].play }.defer(0.5); // defer needed as the free above and play immediately doesn't work
+				{ proxyspace[agent].play(outbus:2) }.defer(0.5); // defer needed as the free above and play immediately doesn't work
 			}, { // default behavior
 				Pdef(agent, Pbind(
 						\instrument, instrument,
@@ -1798,17 +1840,18 @@ XiiLang {
 						\dur, Pseq(durarr, inf),
 						\sustain, Pseq(sustainarr, inf),
 						\amp, Pseq(attackarr*agentDict[agent][1].amp, inf),
+						\out, cuearr.postln,                      // vjtavo
 						\pan, Pseq(panarr, inf)
 				)).quant = [durarr.sum, quantphase, 0, 1];
 					//proxyspace[agent].play; // this would build up synths on server on commands such as yoyo agent
 				if(agentDict[agent][1].playstate == false, {
-					proxyspace[agent].play; // this would build up synths on server on commands such as yoyo agent
+					proxyspace[agent].play(outbus:2); // this would build up synths on server on commands such as yoyo agent
 				});
 			});
 		});
 	}
 
-	playScoreMode2 {arg agent, pitch, amparr, durarr, panarr, instrument, quantphase, newInstrFlag;
+	playScoreMode2 {arg agent, pitch, amparr, durarr, cuearr, panarr, instrument, quantphase, newInstrFlag;
 		// ------------ play function --------------
 		if(proxyspace[agent].isNeutral, { // check if the object exists alreay
 			Pdefn((agent++"durarray").asSymbol, Pseq(durarr, inf));
@@ -1816,12 +1859,13 @@ XiiLang {
 			Pdef(agent, Pmono(instrument,
 						\dur, Pdefn((agent++"durarray").asSymbol),
 						\freq, pitch.midicps,
-						\noteamp, Pdefn((agent++"amparray").asSymbol),
+			     		\noteamp, Pdefn((agent++"amparray").asSymbol),
+						\out, cuearr.postln,                     // vjtavo
 						\pan, Pseq(panarr, inf)
 			));
 			proxyspace[agent].quant = [durarr.sum, quantphase, 0, 1];
 			proxyspace[agent] = Pdef(agent);
-			proxyspace[agent].play;
+			proxyspace[agent].play(outbus:2);
 		},{
 			Pdefn((agent++"durarray").asSymbol, Pseq(durarr, inf)).quant = [durarr.sum, quantphase, 0, 1];
 			Pdefn((agent++"amparray").asSymbol, Pseq(amparr, inf)).quant = [durarr.sum, quantphase, 0, 1];
@@ -1831,9 +1875,10 @@ XiiLang {
 							\dur, Pdefn((agent++"durarray").asSymbol),
 							\freq, pitch.midicps,
 							\noteamp, Pdefn((agent++"amparray").asSymbol),
+							\out, cuearr.postln,                   // vjtavo
 							\pan, Pseq(panarr, inf)
 				));
-				{ proxyspace[agent].play }.defer(0.5); // defer needed as the free above and play immediately doesn't work
+				{ proxyspace[agent].play(outbus:2) }.defer(0.5); // defer needed as the free above and play immediately doesn't work
 			});
 		});
 		Pdef(agent).set(\amp, agentDict[agent][1].amp); // proxyspace quirk: amp set from outside
@@ -1926,10 +1971,10 @@ XiiLang {
 			agentDict[agent][1].amp = amp;
 			switch(agentDict[agent][1].mode)
 				{0} { this.playScoreMode0(agent, agentDict[agent][1].notearr, agentDict[agent][1].durarr, agentDict[agent][1].instrarr, agentDict[agent][1].sustainarr, 
-						agentDict[agent][1].attackarr, agentDict[agent][1].panarr, agentDict[agent][1].quantphase, false, agentDict[agent][1].morphmode); }
+						agentDict[agent][1].attackarr, agentDict[agent][1].cuearr, agentDict[agent][1].panarr, agentDict[agent][1].quantphase, false, agentDict[agent][1].morphmode); }
 				{1} { 
 					this.playScoreMode1(agent, agentDict[agent][1].notearr, agentDict[agent][1].durarr, agentDict[agent][1].sustainarr, 
-						agentDict[agent][1].attackarr, agentDict[agent][1].panarr, agentDict[agent][1].instrument, agentDict[agent][1].quantphase, false, 
+						agentDict[agent][1].attackarr, agentDict[agent][1].cuearr, agentDict[agent][1].panarr, agentDict[agent][1].instrument, agentDict[agent][1].quantphase, false, 
 						agentDict[agent][1].midichannel); }
 				{2} { Pdef(agent).set(\amp, amp) };
 		});
@@ -1954,8 +1999,8 @@ XiiLang {
 			" --->    ixi lang : AMP : ".post; amp.postln;
 			agentDict[agent][1].amp = amp;
 			switch(agentDict[agent][1].mode)
-				{0} { this.playScoreMode0(agent, agentDict[agent][1].notearr, agentDict[agent][1].durarr, agentDict[agent][1].instrarr, agentDict[agent][1].sustainarr, agentDict[agent][1].attackarr, agentDict[agent][1].panarr, agentDict[agent][1].quantphase, false, agentDict[agent][1].morphmode); }
-				{1} { this.playScoreMode1(agent, agentDict[agent][1].notearr, agentDict[agent][1].durarr, agentDict[agent][1].sustainarr, agentDict[agent][1].attackarr, agentDict[agent][1].panarr, agentDict[agent][1].instrument, agentDict[agent][1].quantphase, false, agentDict[agent][1].midichannel); }
+				{0} { this.playScoreMode0(agent, agentDict[agent][1].notearr, agentDict[agent][1].durarr, agentDict[agent][1].instrarr, agentDict[agent][1].sustainarr, agentDict[agent][1].attackarr, agentDict[agent][1].cuearr, agentDict[agent][1].panarr, agentDict[agent][1].quantphase, false, agentDict[agent][1].morphmode); }
+				{1} { this.playScoreMode1(agent, agentDict[agent][1].notearr, agentDict[agent][1].durarr, agentDict[agent][1].sustainarr, agentDict[agent][1].attackarr, agentDict[agent][1].cuearr, agentDict[agent][1].panarr, agentDict[agent][1].instrument, agentDict[agent][1].quantphase, false, agentDict[agent][1].midichannel); }
 				{2} { Pdef(agent).set(\amp, amp) };
 		});
 	}
@@ -2204,7 +2249,7 @@ XiiLang {
 						agentDict[agent][1].playstate = true;
 						//if(agentDict[agent][1].mode == 2, { // mode 2 would not mute/unmute
 							//Pdef(agent).play;
-							proxyspace[agent].play;
+							proxyspace[agent].play(outbus:2);
 						//});
 						//proxyspace[agent].objects[0].array[0].unmute;
 				 		doc.stringColor_(oncolor, stringstart, stringend-stringstart);
@@ -2238,7 +2283,7 @@ XiiLang {
 					 				on = false;
 					 			}, {
 									if(agentDict[agent][1].mode == 2, { // mode 2 would not mute/unmute
-										proxyspace[agent].play;
+										proxyspace[agent].play(outbus:2);
 									});
 					 				proxyspace[agent].objects[0].array[0].unmute;
 									agentDict[agent][1].playstate = true;
@@ -2275,7 +2320,7 @@ XiiLang {
 							      napdur.wait;
 							});
 							if(agentDict[agent][1].mode == 2, { // mode 2 would not mute/unmute
-								proxyspace[agent].play;
+								proxyspace[agent].play(outbus:2);
 							});
 				 			proxyspace[agent].objects[0].array[0].unmute;
 							{doc.stringColor_(oncolor, stringstart, stringend-stringstart)}.defer;
@@ -2432,6 +2477,11 @@ XiiLang {
 					// -------- perform the method -----------
 					this.swapString(doc, pureagentname, score, [true, true, true], ["^", argument]);
 				}
+				{"cue"} {          // vjtavo
+					argument = argument.asInteger;
+					// -------- perform the method -----------
+					this.swapString(doc, pureagentname, score, [true, true, true], ["cue", argument]);
+				}
 				{"<"} { 
 					argument = argument.asInteger;
 					// -------- perform the method -----------
@@ -2466,7 +2516,7 @@ XiiLang {
 						{1} { this.parseScoreMode1(dictscore) };
 					//	{2} { this.parseScoreMode2(dictscore) }; // not relevant
 					if(agentDict[agent][1].playstate == true, {
-						proxyspace[agent].play;
+						proxyspace[agent].play(outbus:2);
 					});
 					scale = tempscale; // set global scale of the session back to the default
 				}
@@ -2508,7 +2558,8 @@ XiiLang {
  ()		: control note length (1 is whole note, 2 is half, etc. - ~ will multiply the lenghts with n) 
  ^^		: control note accent (1 is quiet, 9 is loud) 
  <>		: panning (1 is left, 9 right) 
-
+ cue     : active cueing   //vjtavo
+ 
   -----------  methods  -----------
  doze 	: pause agent
  perk 	: resume agent
